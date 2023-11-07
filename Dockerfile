@@ -53,18 +53,6 @@ RUN git clone -b 'v19.21' --single-branch https://github.com/davisking/dlib.git 
     cd /dlib && \
     python3 /dlib/setup.py install --set BUILD_SHARED_LIBS=OFF
 
-# Install face recognition
-RUN pip3 install face_recognition
-
-# Install opencv-python
-RUN pip3 install opencv-python
-
-# Install other package dependencies
-RUN pip3 install tqdm
-RUN pip3 install flask
-RUN pip3 install flask_cors
-RUN pip3 install pathlib
-
 # Runtime Image
 FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
@@ -106,3 +94,21 @@ COPY --from=compile \
 
 # Add our packages
 ENV PATH="/opt/venv/bin:$PATH"
+
+# Clone and install repository
+RUN mkdir -p /app && \
+    git clone https://github.com/smegmarip/performer_video_recognition.git /app && \
+    cd /app && \
+    pip3 install -r requirements.txt  # Assuming your project has a requirements.txt file
+
+# Activate the virtual environment
+RUN /opt/venv/bin/activate
+
+# Expose port 8080 for Flask
+EXPOSE 8080
+
+# Set up a volume mount point
+VOLUME ["/data"]
+
+# Entry point for your application (adjust this according to your project)
+CMD ["python3", "/app/performer_video_recognition/performer_api.py"]
