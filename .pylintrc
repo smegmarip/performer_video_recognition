@@ -1,0 +1,7 @@
+[pylint]
+# Enforce docstring conventions
+enable = comments
+
+# Specify your desired comment-related settings
+# For example, to enforce docstrings for classes and functions:
+comment-min-docstring-length = 1

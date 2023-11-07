@@ -1,0 +1,1 @@
+Project: Face Recognition API for Stash (stashapp/stash)
