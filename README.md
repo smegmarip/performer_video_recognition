@@ -54,6 +54,7 @@ docker  run  -d  [--runtime=nvidia  --gpus  all]  -p8080:8080  -v  /local/path/t
 `POST` or `GET` request to the web service with the video path.
 
 `curl http://localhost:8080/?path=/data/path/to/video.mp4`
+
 `curl -X POST -d "path=/data/path/to/video.mp4" http://localhost:8080/`
 
   
