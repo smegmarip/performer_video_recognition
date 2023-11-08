@@ -99,25 +99,27 @@ COPY --from=compile \
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Reinstall dependencies for opencv
-ARG DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ="America/New_York"
-RUN apt-get update -y 
+RUN apt-get update -y
 RUN DEBIAN_FRONTEND=noninteractive TZ="America/New_York" apt-get install -y \
+    cmake \
     git \
     libopencv-dev \
+    libatlas-base-dev \
     ffmpeg \
     libsm6 \
     libxext6
+
+# Activate the virtual environment
+RUN chmod +x /opt/venv/bin/activate
+RUN /opt/venv/bin/activate
 
 # Clone and install repository
 RUN mkdir -p /app && \
     git clone https://github.com/smegmarip/performer_video_recognition.git /app && \
     cd /app && \
     pip3 install -r requirements.txt  # Assuming your project has a requirements.txt file
-
-# Activate the virtual environment
-RUN chmod +x /opt/venv/bin/activate
-RUN /opt/venv/bin/activate
 
 # Expose port 8080 for Flask
 EXPOSE 8080
