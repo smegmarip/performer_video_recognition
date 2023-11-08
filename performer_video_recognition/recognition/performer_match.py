@@ -91,8 +91,13 @@ class PerformerMatch:
         soup = BeautifulSoup(html, "html.parser")
         mydivs = soup.findAll("div")
         score = 0
+        base_url = "https://pornstarbyface.com"
         for div in mydivs:
             urls = []
+            poster = ""
+            img = div.find("img", attrs={"class": "img-thumbnail"}, recursive=True)
+            if img is not None:
+                poster = base_url + img["src"]
             if "progress-bar" in div.get("class", []):
                 score = int(div["similarity"])
             elif div.get("class", "") == ["candidate-real"]:
@@ -101,6 +106,6 @@ class PerformerMatch:
                     name = p.text
                     for a in d.findAll("a"):
                         urls.append(a["href"])
-                    data.append({"name": name, "urls": urls, "score": score})
+                    data.append({"name": name, "urls": urls, "poster": poster, "score": score})
 
         return sorted(data, key=lambda x: x["score"], reverse=True)[:limit]
