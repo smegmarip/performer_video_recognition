@@ -1,23 +1,13 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS compile
+# Builder Image
+FROM python:3.10.13-slim-bullseye AS compile
 
-# Install dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -y && apt-get install -y \
-    git \
-    cmake \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-dev \
-    python3-numpy \
-    gcc \
+# Install Dependencies
+RUN apt-get -y update && apt-get install -y --fix-missing \
     build-essential \
+    cmake \
     gfortran \
+    git \
     wget \
-    unzip \
     curl \
     graphicsmagick \
     libgraphicsmagick1-dev \
@@ -29,11 +19,11 @@ RUN apt-get update -y && apt-get install -y \
     liblapack-dev \
     libswscale-dev \
     pkg-config \
+    python3-dev \
+    python3-numpy \
     software-properties-common \
     zip \
-    libopencv-dev \
     && apt-get clean && rm -rf /tmp/* /var/tmp/*
-
 
 # Virtual Environment
 ENV VIRTUAL_ENV=/opt/venv
@@ -44,56 +34,64 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip3 install --upgrade pip && \
     pip3 install scikit-build
 
-# Install dlib
+# Install Dlib
 ENV CFLAGS=-static
-RUN git clone -b 'v19.21' --single-branch https://github.com/davisking/dlib.git dlib/ && \
-    mkdir -p /dlib/build && \
-    cmake -H/dlib -B/dlib/build -DDLIB_USE_CUDA=1 -DUSE_AVX_INSTRUCTIONS=1 && \
-    cmake --build /dlib/build && \
-    cd /dlib && \
-    python3 /dlib/setup.py install --set BUILD_SHARED_LIBS=OFF
+RUN pip3 install --upgrade pip && \
+    git clone -b 'v19.21' --single-branch https://github.com/davisking/dlib.git && \
+    cd dlib/ && \
+    python3 setup.py install --set BUILD_SHARED_LIBS=OFF
+
+RUN pip3 install face_recognition
+
 
 # Runtime Image
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM python:3.10.13-slim-bullseye
 
 # Install requirements
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-distutils
 
-# Copy in libs
 COPY --from=compile /opt/venv /opt/venv
 COPY --from=compile \
     # Sources
     /lib/x86_64-linux-gnu/libpthread.so.0 \
-    /lib/x86_64-linux-gnu/libdl.so.2 \
-    /lib/x86_64-linux-gnu/librt.so.1 \
-    /lib/x86_64-linux-gnu/libX11.so.6 \
-    /lib/x86_64-linux-gnu/libpng16.so.16 \
-    /lib/x86_64-linux-gnu/libjpeg.so.8 \
-    /lib/x86_64-linux-gnu/libcudnn.so.8 \
-    /lib/x86_64-linux-gnu/libstdc++.so.6 \
+    /lib/x86_64-linux-gnu/libz.so.1 \
     /lib/x86_64-linux-gnu/libm.so.6 \
     /lib/x86_64-linux-gnu/libgcc_s.so.1 \
     /lib/x86_64-linux-gnu/libc.so.6 \
-    /lib/x86_64-linux-gnu/libxcb.so.1 \
-    /lib/x86_64-linux-gnu/libz.so.1 \
-    /lib/x86_64-linux-gnu/libXau.so.6 \
-    /lib/x86_64-linux-gnu/libXdmcp.so.6 \
-    /lib/x86_64-linux-gnu/libbsd.so.0 \
+    /lib/x86_64-linux-gnu/libdl.so.2 \
+    /lib/x86_64-linux-gnu/librt.so.1 \
     # Destination
     /lib/x86_64-linux-gnu/
+
 COPY --from=compile \
     # Sources
-    /usr/local/cuda/lib64/libcublas.so.11 \
-    /usr/local/cuda/lib64/libcurand.so.10 \
-    /usr/local/cuda/lib64/libcusolver.so.11 \
-    /usr/local/cuda/lib64/libcublasLt.so.11 \
+    /usr/lib/x86_64-linux-gnu/libX11.so.6 \
+    /usr/lib/x86_64-linux-gnu/libXext.so.6 \
+    /usr/lib/x86_64-linux-gnu/libpng16.so.16 \
+    /usr/lib/x86_64-linux-gnu/libjpeg.so.62 \
+    /usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
+    /usr/lib/x86_64-linux-gnu/libxcb.so.1 \
+    /usr/lib/x86_64-linux-gnu/libXau.so.6 \
+    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6 \
+    /usr/lib/x86_64-linux-gnu/libbsd.so.0 \
     # Destination
-    /usr/local/cuda/lib64/
+    /usr/lib/x86_64-linux-gnu/
 
 # Add our packages
 ENV PATH="/opt/venv/bin:$PATH"
+
+# Reinstall dependencies for opencv
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ="America/New_York"
+RUN apt-get update -y 
+RUN DEBIAN_FRONTEND=noninteractive TZ="America/New_York" apt-get install -y \
+    git \
+    libopencv-dev \
+    ffmpeg \
+    libsm6 \
+    libxext6
 
 # Clone and install repository
 RUN mkdir -p /app && \
@@ -102,6 +100,7 @@ RUN mkdir -p /app && \
     pip3 install -r requirements.txt  # Assuming your project has a requirements.txt file
 
 # Activate the virtual environment
+RUN chmod +x /opt/venv/bin/activate
 RUN /opt/venv/bin/activate
 
 # Expose port 8080 for Flask

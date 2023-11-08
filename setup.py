@@ -20,6 +20,7 @@ setup(
         "flask_cors>= 4.0.0",
         "pathlib>=1.0.0",
         "scikit-build>=0.17.6",
+	"requests>=2.0.0",
     ],
     license="GPL",
     url="https://github.com/smegmarip/",
