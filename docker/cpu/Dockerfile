@@ -22,6 +22,9 @@ RUN apt-get -y update && apt-get install -y --fix-missing \
     python3-dev \
     python3-numpy \
     software-properties-common \
+    libx11-dev \
+    libgtk-3-dev \
+    libboost-python-dev \
     zip \
     && apt-get clean && rm -rf /tmp/* /var/tmp/*
 
@@ -35,11 +38,11 @@ RUN pip3 install --upgrade pip && \
     pip3 install scikit-build
 
 # Install Dlib
-ENV CFLAGS=-static
-RUN pip3 install --upgrade pip && \
-    git clone -b 'v19.21' --single-branch https://github.com/davisking/dlib.git && \
-    cd dlib/ && \
-    python3 setup.py install --set BUILD_SHARED_LIBS=OFF
+#ENV CFLAGS=-static
+#RUN pip3 install --upgrade pip && \
+#    git clone -b 'v19.21' --single-branch https://github.com/davisking/dlib.git && \
+#    cd dlib/ && \
+#    python3 setup.py install --set BUILD_SHARED_LIBS=OFF
 
 RUN pip3 install face_recognition
 
@@ -87,8 +90,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ="America/New_York"
 RUN apt-get update -y 
 RUN DEBIAN_FRONTEND=noninteractive TZ="America/New_York" apt-get install -y \
+    cmake \
     git \
     libopencv-dev \
+    libatlas-base-dev \
     ffmpeg \
     libsm6 \
     libxext6
