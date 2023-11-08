@@ -76,7 +76,7 @@ The response is a JSON array of matching performers with the following structure
 			  "score": "match confidence score (0-100)",
 			  "urls": ["list of profile urls"], 
 			},
-			...
+			// ...
 		],
 	}
 ]
