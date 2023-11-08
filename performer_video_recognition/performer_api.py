@@ -47,7 +47,7 @@ def get_faces(video_path: str) -> List:
     :return: a list of faces detected in the video.
     """
     job = VideoFaceRecognition(output_dir="~/faces")
-    return job.process()
+    return job.process(video_path)
 
 
 def get_performers(face_groups: List):
@@ -71,7 +71,7 @@ def get_performers(face_groups: List):
         raise BadRequest("No matches found.")
 
 
-@app.route("/", methods=["POST"])
+@app.route("/", methods=["POST", "GET"])
 def scan():
     """
     The `scan` function takes a video path as input, checks if it is a valid video file, and then

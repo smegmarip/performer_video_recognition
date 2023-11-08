@@ -18,7 +18,8 @@ from .performer_match import PerformerMatch
 from .progressbar import ProgressBar
 
 # DLIB Landmarks data
-landmarks_file = "shape_predictor_68_face_landmarks.dat"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+landmarks_file = os.path.join(script_dir, "shape_predictor_68_face_landmarks.dat")
 
 # DLIB sub-detectors
 DLIB_SUBD = ["n/a", "front", "left", "right", "front-rotate-left", "front-rotate-right"]
@@ -78,7 +79,7 @@ class VideoFaceRecognition:
         :type display_progress: bool (optional)
         """
         self.interval = interval
-        self.quality_mode = f"{algorithm}_mode"
+        self.quality_mode = f"{algorithm}_quality"
         self.output_dir = os.path.expanduser(output_dir)
         self.padding = padding
         self.display_progress = display_progress
@@ -272,8 +273,6 @@ class VideoFaceRecognition:
                     (image.shape[1], image.shape[0]),
                     flags=cv2.INTER_LINEAR,
                 )
-
-                transformed_image = self.reorient_face(landmarks)
 
                 # Calculate rotated landmarks as a NumPy array
                 landmarks_array = np.array(
@@ -583,6 +582,7 @@ class VideoFaceRecognition:
             for i, face_data in enumerate(frame_data["faces"]):
                 key = f"{idx}_{i}"
                 cropped = face_data["cropped"]
+                cropped = cv2.cvtColor(face_data["cropped"], cv2.COLOR_BGR2RGB)
                 face_encoding = face_recognition.face_encodings(cropped)
                 if len(face_encoding):
                     face_encodings[key] = face_encoding[0]
